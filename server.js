@@ -12,29 +12,41 @@ import { DatabaseMemory } from "./database-memory.js";
 
 const server = fastify();
 
-const database  =  new DatabaseMemory()
+const database = new DatabaseMemory();
 
-server.post("/videos", ( request, reply) => {
+server.post("/videos", (request, reply) => {
+  const { title, description, duration } = request.body;
+
   database.create({
-    title: " video 01",
-    description: "este é o video 01",
-    duration: 180
+    title,
+    description,
+    duration,
+  });
 
-  })
-
-  return reply.status(201).send()
+  return reply.status(201).send();
 });
 
 server.get("/videos", () => {
-  return " y4vt34f34gtrye";
+  const videos = database.list();
+
+  return videos;
 });
 
-server.put("/videos/:id", () => {
-  return " 53453";
+server.put("/videos/:id", (request, reply) => {
+  const videoId = request.params.id;
+  const { title, description, duration } = request.body;
+
+  database.update(videoId, { title, description, duration });
+
+  return reply.status(204).send()
 });
 
-server.delete("/videos/:id", () => {
-  return " 53453";
+server.delete("/videos/:id", (request, reply) => {
+  const videoId = request.params.id
+
+  database.delete(videoId)
+
+  return reply.status(204).send()
 });
 
 server.listen({
