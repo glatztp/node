@@ -6,18 +6,24 @@
 // })
 
 // server.listen(3333)
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'; // dev only
 
 import { fastify } from "fastify";
-import { DatabaseMemory } from "./database-memory.js";
+// import { DatabaseMemory } from "./database-memory.js";
+import { DatabasePostgres } from "./database-postgres.js";
 
 const server = fastify();
 
-const database = new DatabaseMemory();
+// const database = new DatabaseMemory();
 
-server.post("/videos", (request, reply) => {
+const database = new DatabasePostgres()
+
+//------------------POST
+
+server.post("/videos", async (request, reply) => {
   const { title, description, duration } = request.body;
 
-  database.create({
+  await database.create({
     title,
     description,
     duration,
@@ -26,29 +32,38 @@ server.post("/videos", (request, reply) => {
   return reply.status(201).send();
 });
 
-server.get("/videos", () => {
-  const videos = database.list();
+//------------------GET
+
+server.get("/videos", async (request) => {
+  const search = request.query.search;
+  const videos = await database.list(search);
+
+  console.log(search);
 
   return videos;
 });
 
-server.put("/videos/:id", (request, reply) => {
+//------------------PUT
+
+server.put("/videos/:id", async (request, reply) => {
   const videoId = request.params.id;
   const { title, description, duration } = request.body;
 
-  database.update(videoId, { title, description, duration });
+ await database.update(videoId, { title, description, duration });
 
-  return reply.status(204).send()
+  return reply.status(204).send();
 });
 
-server.delete("/videos/:id", (request, reply) => {
-  const videoId = request.params.id
+//------------------DELETE
 
-  database.delete(videoId)
+server.delete("/videos/:id", async (request, reply) => {
+  const videoId = request.params.id;
 
-  return reply.status(204).send()
+  await database.delete(videoId);
+
+  return reply.status(204).send();
 });
 
 server.listen({
-  port: 3333,
+  port: process.env.PORT ?? 3333,
 });
